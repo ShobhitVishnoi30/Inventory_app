@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  FilterInventoryDto,
-  InventoryDto,
-  UpdateInventoryDto,
-} from 'src/Dto/inventory.dto';
+import { InventoryDto } from 'src/Dto/createInventory.dto';
+import { FilterInventoryDto } from 'src/Dto/filterInventory.dto';
+import { UpdateInventoryDto } from 'src/Dto/updateInventory.dto';
 import { Inventory } from 'src/Entity/inventory.entity';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
@@ -12,26 +10,26 @@ import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 export class InventoryService {
   constructor(
     @InjectRepository(Inventory)
-    private inventoryRepository: Repository<Inventory>,
+    private readonly inventoryRepository: Repository<Inventory>,
   ) {}
 
-  async createInventory(createInventory: InventoryDto): Promise<any> {
-    const data = this.inventoryRepository.create(createInventory);
-    const savedUser = await this.inventoryRepository.save(data);
-    return savedUser;
+  async createInventory(inventory: InventoryDto): Promise<InventoryDto> {
+    const data = this.inventoryRepository.create(inventory);
+    const savedInventory = await this.inventoryRepository.save(data);
+    return savedInventory;
   }
 
-  async getInventory(): Promise<any> {
+  async getAllInventory(): Promise<InventoryDto[]> {
     return await this.inventoryRepository.find();
   }
 
   async updateInventory(
-    id: number,
+    id: string,
     updateInventory: UpdateInventoryDto,
-  ): Promise<any> {
+  ): Promise<InventoryDto[]> {
     const inventory = await this.inventoryRepository.find({
       where: {
-        id,
+        id: id,
       },
     });
 
@@ -41,11 +39,20 @@ export class InventoryService {
       return (inventory[0][key] = updateInventory[key]);
     });
 
-    return await this.inventoryRepository.save(inventory);
+    await this.inventoryRepository.save(inventory);
+
+    return inventory;
   }
 
-  async deleteInventory(id: number): Promise<any> {
-    return await this.inventoryRepository.delete(id);
+  async deleteInventory(id: string): Promise<InventoryDto> {
+    const inventory = await this.inventoryRepository.find({
+      where: {
+        id: id,
+      },
+    });
+    await this.inventoryRepository.delete(id);
+
+    return inventory[0];
   }
 
   async getFilteredInventory(

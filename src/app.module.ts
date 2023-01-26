@@ -1,21 +1,23 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { InventoryController } from './inventory/inventory.controller';
 import { InventoryModule } from './inventory/inventory.module';
-import * as dotenv from 'dotenv';
-import { Inventory } from './Entity/inventory.entity';
-dotenv.config();
+import { ConfigModule } from '@nestjs/config';
+import * as path from 'path';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: Number(process.env.DB_PORT),
+      host: process.env.environment,
+      port: +process.env.DB_PORT,
       username: process.env.USERNAME,
       password: process.env.PASSWORD,
       database: process.env.DB_NAME,
-      entities: [Inventory],
+      entities: [
+        path.join(__dirname, '**', '**', '*.entity{.ts,.js}'),
+        path.join(__dirname, '**', '**', '*.entities{.ts,.js}'),
+      ],
       synchronize: true,
     }),
     InventoryModule,
