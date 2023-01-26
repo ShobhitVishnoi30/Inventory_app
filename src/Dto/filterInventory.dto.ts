@@ -10,4 +10,16 @@ export class FilterInventoryDto extends PartialType(InventoryDto) {
   @IsBoolean()
   @IsOptional()
   moreThanGivenPrice: Boolean = true;
+
+  @IsOptional()
+  @IsBoolean()
+  sortByName: Boolean = true;
+
+  @IsOptional()
+  @IsBoolean()
+  sortByPrice: Boolean = true;
+
+  @IsOptional()
+  @IsBoolean()
+  sortByQuantity: Boolean = true;
 }

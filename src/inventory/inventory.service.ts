@@ -74,6 +74,7 @@ export class InventoryService {
     filterInventoryDto: FilterInventoryDto,
   ): Promise<InventoryDto[]> {
     let where = {};
+    let orderBy = {};
     let inventory: Inventory[];
 
     const {
@@ -83,30 +84,37 @@ export class InventoryService {
       quantity,
       moreThanGivenPrice,
       moreThanGivenQuantity,
+      sortByName,
+      sortByPrice,
+      sortByQuantity,
     } = filterInventoryDto;
 
     if (productName) {
-      where['productName'] = filterInventoryDto.productName;
+      where['productName'] = productName;
     }
     if (quantity) {
       if (moreThanGivenQuantity) {
-        where['quantity'] = MoreThanOrEqual(filterInventoryDto.quantity);
+        where['quantity'] = MoreThanOrEqual(quantity);
       } else {
-        where['quantity'] = LessThanOrEqual(filterInventoryDto.quantity);
+        where['quantity'] = LessThanOrEqual(quantity);
       }
     }
     if (price) {
       if (moreThanGivenPrice) {
-        where['price'] = MoreThanOrEqual(filterInventoryDto.price);
+        where['price'] = MoreThanOrEqual(price);
       } else {
-        where['price'] = LessThanOrEqual(filterInventoryDto.price);
+        where['price'] = LessThanOrEqual(price);
       }
     }
     if (category) {
-      where['category'] = filterInventoryDto.category;
+      where['category'] = category;
     }
 
-    inventory = await this.inventoryRepository.find({ where });
+    orderBy['productName'] = sortByName ? 'ASC' : 'DESC';
+    orderBy['price'] = sortByPrice ? 'ASC' : 'DESC';
+    orderBy['quantity'] = sortByQuantity ? 'ASC' : 'DESC';
+
+    inventory = await this.inventoryRepository.find({ where, order: orderBy });
     if (inventory.length != 0) {
       return inventory;
     } else {
