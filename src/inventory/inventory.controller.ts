@@ -20,14 +20,22 @@ export class InventoryController {
 
   @Post('insert')
   async insert(@Body() inventoryDto: InventoryDto): Promise<ResponseDTO> {
-    const addedInventory = await this.inventoryService.createInventory(
-      inventoryDto,
-    );
-    return {
-      success: true,
-      message: 'Inventory added successfully',
-      data: addedInventory,
-    };
+    try {
+      const addedInventory = await this.inventoryService.createInventory(
+        inventoryDto,
+      );
+      return {
+        success: true,
+        message: 'Inventory added successfully',
+        data: addedInventory,
+      };
+    } catch (e) {
+      return {
+        success: false,
+        message: e.message,
+        data: null,
+      };
+    }
   }
 
   @Get()
@@ -35,9 +43,27 @@ export class InventoryController {
     const inventoryData = await this.inventoryService.getAllInventory();
     return {
       success: true,
-      message: 'Inventory fetched successfully',
+      message: `Inventory fetched successfully with ${inventoryData.length} items`,
       data: inventoryData,
     };
+  }
+
+  @Get(':id')
+  async getInventoryById(@Param('id') id: string): Promise<ResponseDTO> {
+    try {
+      const inventoryData = await this.inventoryService.getInventoryById(id);
+      return {
+        success: true,
+        message: 'Inventory fetched successfully',
+        data: inventoryData,
+      };
+    } catch (e) {
+      return {
+        success: false,
+        message: e.message,
+        data: null,
+      };
+    }
   }
 
   @Patch(':id')
@@ -45,26 +71,43 @@ export class InventoryController {
     @Param('id') id: string,
     @Body() updateInventoryDto: UpdateInventoryDto,
   ): Promise<ResponseDTO> {
-    const updatedInventory = await this.inventoryService.updateInventory(
-      id,
-      updateInventoryDto,
-    );
+    try {
+      const updatedInventory = await this.inventoryService.updateInventory(
+        id,
+        updateInventoryDto,
+      );
 
-    return {
-      success: true,
-      message: 'Inventory updated successfully',
-      data: updatedInventory,
-    };
+      return {
+        success: true,
+        message: 'Inventory updated successfully',
+        data: updatedInventory,
+      };
+    } catch (e) {
+      return {
+        success: false,
+        message: e.message,
+        data: null,
+      };
+    }
   }
 
   @Delete(':id')
   async deleteInventory(@Param('id') id: string): Promise<ResponseDTO> {
-    const deletedInventory = await this.inventoryService.deleteInventory(id);
-    return {
-      success: true,
-      message: 'Inventory deleted successfully',
-      data: deletedInventory,
-    };
+    try {
+      const deletedInventory = await this.inventoryService.deleteInventory(id);
+
+      return {
+        success: true,
+        message: 'Inventory deleted successfully',
+        data: deletedInventory,
+      };
+    } catch (e) {
+      return {
+        success: false,
+        message: e.message,
+        data: null,
+      };
+    }
   }
 
   @Get('/filter')

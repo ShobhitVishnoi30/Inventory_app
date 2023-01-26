@@ -23,6 +23,19 @@ export class InventoryService {
     return await this.inventoryRepository.find();
   }
 
+  async getInventoryById(id: string): Promise<InventoryDto> {
+    const inventory = await this.inventoryRepository.find({
+      where: {
+        id: id,
+      },
+    });
+    if (inventory.length != 0) {
+      return inventory[0];
+    } else {
+      throw new Error(`Product with ${id} does not exists`);
+    }
+  }
+
   async updateInventory(
     id: string,
     updateInventory: UpdateInventoryDto,
@@ -33,15 +46,19 @@ export class InventoryService {
       },
     });
 
-    const keys = Object.keys(updateInventory);
+    if (inventory.length != 0) {
+      const keys = Object.keys(updateInventory);
 
-    keys.forEach((key) => {
-      return (inventory[0][key] = updateInventory[key]);
-    });
+      keys.forEach((key) => {
+        return (inventory[0][key] = updateInventory[key]);
+      });
 
-    await this.inventoryRepository.save(inventory);
+      await this.inventoryRepository.save(inventory);
 
-    return inventory;
+      return inventory;
+    } else {
+      throw new Error('No such product exists');
+    }
   }
 
   async deleteInventory(id: string): Promise<InventoryDto> {
@@ -50,9 +67,12 @@ export class InventoryService {
         id: id,
       },
     });
-    await this.inventoryRepository.delete(id);
-
-    return inventory[0];
+    if (inventory.length != 0) {
+      await this.inventoryRepository.delete(id);
+      return inventory[0];
+    } else {
+      throw new Error('No such product exists');
+    }
   }
 
   async getFilteredInventory(
