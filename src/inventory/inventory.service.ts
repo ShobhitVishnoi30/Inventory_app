@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InventoryDto } from 'src/Dto/createInventory.dto';
 import { FilterInventoryDto } from 'src/Dto/filterInventory.dto';
@@ -13,7 +13,7 @@ export class InventoryService {
     private readonly inventoryRepository: Repository<Inventory>,
   ) {}
 
-  async createInventory(inventory: InventoryDto): Promise<InventoryDto> {
+  async insertProduct(inventory: InventoryDto): Promise<InventoryDto> {
     const data = this.inventoryRepository.create(inventory);
     const savedInventory = await this.inventoryRepository.save(data);
     return savedInventory;
@@ -32,32 +32,27 @@ export class InventoryService {
     if (inventory.length != 0) {
       return inventory[0];
     } else {
-      throw new Error(`Product with ${id} does not exists`);
+      throw new NotFoundException(`Product with ${id} does not exists`);
     }
   }
 
   async updateInventory(
     id: string,
     updateInventory: UpdateInventoryDto,
-  ): Promise<InventoryDto[]> {
-    const inventory = await this.inventoryRepository.find({
-      where: {
-        id: id,
-      },
-    });
+  ): Promise<InventoryDto> {
+    let inventory = await this.inventoryRepository.findOneBy({ id: id });
 
-    if (inventory.length != 0) {
+    if (inventory) {
       const keys = Object.keys(updateInventory);
-
       keys.forEach((key) => {
-        return (inventory[0][key] = updateInventory[key]);
+        if (updateInventory[key]) {
+          return (inventory[key] = updateInventory[key]);
+        }
       });
-
-      await this.inventoryRepository.save(inventory);
-
+      inventory = await this.inventoryRepository.save(inventory);
       return inventory;
     } else {
-      throw new Error('No such product exists');
+      throw new NotFoundException('No such product exists');
     }
   }
 
@@ -71,155 +66,51 @@ export class InventoryService {
       await this.inventoryRepository.delete(id);
       return inventory[0];
     } else {
-      throw new Error('No such product exists');
+      throw new NotFoundException('No such product exists');
     }
   }
 
-  async getFilteredInventory(
+  async filteredInventory(
     filterInventoryDto: FilterInventoryDto,
-  ): Promise<any> {
-    const keys = Object.keys(filterInventoryDto);
-    //fetch all the product which has greater quantity
+  ): Promise<InventoryDto[]> {
+    let where = {};
     let inventory: Inventory[];
-    if (keys.length == 1) {
-      if (keys.includes('quantity')) {
-        inventory = await this.inventoryRepository.find({
-          where: {
-            quantity: MoreThanOrEqual(filterInventoryDto.quantity),
-          },
-        });
-      }
-      if (keys.includes('price')) {
-        inventory = await this.inventoryRepository.find({
-          where: {
-            price: MoreThanOrEqual(filterInventoryDto.price),
-          },
-        });
-      }
-      if (keys.includes('category')) {
-        inventory = await this.inventoryRepository.find({
-          where: {
-            category: filterInventoryDto.category,
-          },
-        });
-      }
-    } else if (keys.length == 2) {
-      if (keys.includes('quantity') && keys.includes('category')) {
-        inventory = await this.inventoryRepository.find({
-          where: {
-            quantity: MoreThanOrEqual(filterInventoryDto.quantity),
-            category: filterInventoryDto.category,
-          },
-        });
-      }
-      if (keys.includes('price') && keys.includes('category')) {
-        inventory = await this.inventoryRepository.find({
-          where: {
-            price: MoreThanOrEqual(filterInventoryDto.price),
-            category: filterInventoryDto.category,
-          },
-        });
-      }
-    } else if (keys.length == 3) {
-      if (
-        keys.includes('quantity') &&
-        keys.includes('category') &&
-        keys.includes('moreThanGivenQuantity')
-      ) {
-        if (filterInventoryDto.moreThanGivenQuantity) {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              quantity: MoreThanOrEqual(filterInventoryDto.quantity),
-              category: filterInventoryDto.category,
-            },
-          });
-        } else {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              quantity: LessThanOrEqual(filterInventoryDto.quantity),
-              category: filterInventoryDto.category,
-            },
-          });
-        }
-      }
 
-      if (
-        keys.includes('price') &&
-        keys.includes('category') &&
-        keys.includes('moreThanGivenPrice')
-      ) {
-        if (filterInventoryDto.moreThanGivenPrice) {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              price: MoreThanOrEqual(filterInventoryDto.price),
-              category: filterInventoryDto.category,
-            },
-          });
-        } else {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              price: LessThanOrEqual(filterInventoryDto.price),
-              category: filterInventoryDto.category,
-            },
-          });
-        }
-      }
-    } else {
-      if (
-        keys.includes('quantity') &&
-        keys.includes('category') &&
-        keys.includes('price')
-      ) {
-        if (
-          filterInventoryDto.moreThanGivenPrice &&
-          filterInventoryDto.moreThanGivenQuantity
-        ) {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              quantity: MoreThanOrEqual(filterInventoryDto.quantity),
-              price: MoreThanOrEqual(filterInventoryDto.price),
-              category: filterInventoryDto.category,
-            },
-          });
-        } else if (
-          filterInventoryDto.moreThanGivenPrice &&
-          !filterInventoryDto.moreThanGivenQuantity
-        ) {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              quantity: LessThanOrEqual(filterInventoryDto.quantity),
-              price: MoreThanOrEqual(filterInventoryDto.price),
-              category: filterInventoryDto.category,
-            },
-          });
-        } else if (
-          !filterInventoryDto.moreThanGivenPrice &&
-          filterInventoryDto.moreThanGivenQuantity
-        ) {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              quantity: MoreThanOrEqual(filterInventoryDto.quantity),
-              price: LessThanOrEqual(filterInventoryDto.price),
-              category: filterInventoryDto.category,
-            },
-          });
-        } else if (
-          !filterInventoryDto.moreThanGivenPrice &&
-          !filterInventoryDto.moreThanGivenQuantity
-        ) {
-          inventory = await this.inventoryRepository.find({
-            where: {
-              quantity: LessThanOrEqual(filterInventoryDto.quantity),
-              price: LessThanOrEqual(filterInventoryDto.price),
-              category: filterInventoryDto.category,
-            },
-          });
-        }
+    const {
+      productName,
+      category,
+      price,
+      quantity,
+      moreThanGivenPrice,
+      moreThanGivenQuantity,
+    } = filterInventoryDto;
+
+    if (productName) {
+      where['productName'] = filterInventoryDto.productName;
+    }
+    if (quantity) {
+      if (moreThanGivenQuantity) {
+        where['quantity'] = MoreThanOrEqual(filterInventoryDto.quantity);
+      } else {
+        where['quantity'] = LessThanOrEqual(filterInventoryDto.quantity);
       }
     }
+    if (price) {
+      if (moreThanGivenPrice) {
+        where['price'] = MoreThanOrEqual(filterInventoryDto.price);
+      } else {
+        where['price'] = LessThanOrEqual(filterInventoryDto.price);
+      }
+    }
+    if (category) {
+      where['category'] = filterInventoryDto.category;
+    }
 
-    return inventory;
+    inventory = await this.inventoryRepository.find({ where });
+    if (inventory.length != 0) {
+      return inventory;
+    } else {
+      throw new NotFoundException('No product found');
+    }
   }
 }
-
-//if I save one more key then it's not throwing error or doing anything
