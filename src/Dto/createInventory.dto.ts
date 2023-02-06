@@ -8,6 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+// NOTE: remove unused imports
 
 export class InventoryDto {
   @IsNotEmpty()

@@ -20,6 +20,7 @@ export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Post('insert')
+  // FIXME: By REST convention for POST mapping it is not required to have another url name, REST mentions to have different methods with same url name
   async insertProduct(
     @Body() inventoryDto: InventoryDto,
   ): Promise<ResponseDTO> {
@@ -31,9 +32,25 @@ export class InventoryController {
         statusCode: 200,
         success: true,
         message: 'Inventory added successfully',
-        itemCount: 1,
+        itemCount: 1, // NOTE: Not necessary for POST mapping response
         data: addedInventory,
       };
+      /* 
+        // NOTE: All the response objects can be modeled into a ResponseHandler
+
+        The generic response message is 
+        {
+          status: <status_code> / <success/fail>
+          message: <message response>, // can be skipped at some cases
+          data: <response_data>
+        }
+
+        itemCount: rename it to "results", it is not necessary to have it in every response, only should be present in array response data
+
+        In case you want to follow current format, you can use response-handler.service.ts file and inject that depedency and call response method / call the same inside interceptor and call the interceptor
+
+        - Exceptions needs to be handled inside service file since almost all exceptions that occur are due to business logic
+      */
     } catch (e) {
       return {
         statusCode: 500,
@@ -126,7 +143,7 @@ export class InventoryController {
         data: updatedInventory,
       };
     } catch (e) {
-      console.log(e);
+      console.log(e); // NOTE: Remove console.log
       return {
         statusCode: e.status,
         success: false,

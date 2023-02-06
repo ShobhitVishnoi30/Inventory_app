@@ -6,7 +6,9 @@ import * as path from 'path';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot(), 
+    // NOTE: Since the env file name will be ".env.stage.<STAGE_NAME>", you should mention the filePath
+    // NOTE: Add JOI Validation for envs
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.environment,

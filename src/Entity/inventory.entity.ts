@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, Double } from 'typeorm';
+// NOTE: remove unused imports
 
 @Entity()
 export class Inventory {
