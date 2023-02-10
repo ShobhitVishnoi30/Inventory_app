@@ -6,7 +6,9 @@ import * as path from 'path';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      envFilePath: '.env.development.local',
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.environment,
