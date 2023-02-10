@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { InventoryDto } from 'src/Dto/createInventory.dto';
-import { FilterInventoryDto } from 'src/Dto/filterInventory.dto';
+import { Direction, FilterInventoryDto } from 'src/Dto/filterInventory.dto';
 import { UpdateInventoryDto } from 'src/Dto/updateInventory.dto';
 import { Inventory } from 'src/Entity/inventory.entity';
+import { apiResponse } from 'src/Interfaces/api-response.interface';
+import { ResponseHandlerService } from 'src/Utilities/response-handler.service';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
@@ -11,68 +13,139 @@ export class InventoryService {
   constructor(
     @InjectRepository(Inventory)
     private readonly inventoryRepository: Repository<Inventory>,
+    private readonly responseHandlerService: ResponseHandlerService,
   ) {}
 
-  async insertProduct(inventory: InventoryDto): Promise<InventoryDto> {
-    const data = this.inventoryRepository.create(inventory);
-    const savedInventory = await this.inventoryRepository.save(data);
-    return savedInventory;
+  async insertProduct(inventoryDto: InventoryDto): Promise<apiResponse> {
+    try {
+      let inventory = this.inventoryRepository.create(inventoryDto);
+
+      inventory = await this.inventoryRepository.save(inventory);
+
+      return await this.responseHandlerService.response(
+        '',
+        HttpStatus.OK,
+        'Inventory added statusfully',
+        inventory,
+      );
+    } catch (e) {
+      return await this.responseHandlerService.response(
+        e.message,
+        HttpStatus.BAD_REQUEST,
+        'Inventory not added',
+        '',
+      );
+    }
   }
 
-  async getAllInventory(): Promise<InventoryDto[]> {
-    return await this.inventoryRepository.find();
+  async getAllInventory(): Promise<apiResponse> {
+    const inventories = await this.inventoryRepository.find();
+    if (inventories.length != 0) {
+      return this.responseHandlerService.response(
+        null,
+        HttpStatus.OK,
+        'Inventory fetched successfully',
+        inventories,
+      );
+    } else {
+      return this.responseHandlerService.response(
+        null,
+        HttpStatus.NO_CONTENT,
+        'No inventory found',
+        inventories,
+      );
+    }
   }
 
-  async getInventoryById(id: string): Promise<InventoryDto> {
-    const inventory = await this.inventoryRepository.find({
+  async getInventoryById(id: string): Promise<apiResponse> {
+    const inventory = await this.inventoryRepository.findOne({
       where: {
-        id: id,
+        id,
       },
     });
-    if (inventory.length != 0) {
-      return inventory[0];
+    if (inventory) {
+      return this.responseHandlerService.response(
+        '',
+        HttpStatus.OK,
+        'Inventory fetched successfully',
+        inventory,
+      );
     } else {
-      throw new NotFoundException(`Product with ${id} does not exists`);
+      return this.responseHandlerService.response(
+        '',
+        HttpStatus.NO_CONTENT,
+        'no such inventory exists',
+        inventory,
+      );
     }
   }
 
   async updateInventory(
     id: string,
     updateInventory: UpdateInventoryDto,
-  ): Promise<InventoryDto> {
-    let inventory = await this.inventoryRepository.findOneBy({ id: id });
+  ): Promise<apiResponse> {
+    let inventory = await this.inventoryRepository.findOneBy({ id });
 
     if (inventory) {
-      const keys = Object.keys(updateInventory);
-      keys.forEach((key) => {
+      Object.keys(updateInventory).forEach((key) => {
         if (updateInventory[key]) {
           return (inventory[key] = updateInventory[key]);
         }
       });
-      inventory = await this.inventoryRepository.save(inventory);
-      return inventory;
+      try {
+        inventory = await this.inventoryRepository.save(inventory);
+        return this.responseHandlerService.response(
+          '',
+          HttpStatus.OK,
+          'Inventory updated successfully',
+          inventory,
+        );
+      } catch (e) {
+        return this.responseHandlerService.response(
+          e.message,
+          HttpStatus.BAD_REQUEST,
+          'Inventory not updated',
+          '',
+        );
+      }
     } else {
-      throw new NotFoundException('No such product exists');
+      return this.responseHandlerService.response(
+        '',
+        HttpStatus.NO_CONTENT,
+        'no such inventory exists',
+        inventory,
+      );
     }
   }
 
-  async deleteInventory(id: string): Promise<InventoryDto> {
-    const inventory = await this.inventoryRepository.find({
+  async deleteInventory(id: string): Promise<apiResponse> {
+    const inventory = await this.inventoryRepository.findOne({
       where: {
-        id: id,
+        id,
       },
     });
-    if (inventory.length != 0) {
+
+    if (inventory) {
       await this.inventoryRepository.delete(id);
-      return inventory[0];
+      return this.responseHandlerService.response(
+        null,
+        HttpStatus.OK,
+        'Inventory deleted successfully',
+        inventory,
+      );
     } else {
-      throw new NotFoundException('No such product exists');
+      return this.responseHandlerService.response(
+        null,
+        HttpStatus.NO_CONTENT,
+        'No such product found',
+        inventory,
+      );
     }
   }
 
   async filteredInventory(
     filterInventoryDto: FilterInventoryDto,
-  ): Promise<InventoryDto[]> {
+  ): Promise<apiResponse> {
     let where = {};
     let orderBy = {};
     let inventory: Inventory[];
@@ -82,25 +155,23 @@ export class InventoryService {
       category,
       price,
       quantity,
-      moreThanGivenPrice,
-      moreThanGivenQuantity,
-      sortByName,
-      sortByPrice,
-      sortByQuantity,
+      sortBy,
+      sortDirection,
+      lowToHigh,
     } = filterInventoryDto;
 
     if (productName) {
       where['productName'] = productName;
     }
-    if (quantity) {
-      if (moreThanGivenQuantity) {
+    if (quantity && sortDirection) {
+      if (sortDirection.toLowerCase() == Direction.EqualOrMore) {
         where['quantity'] = MoreThanOrEqual(quantity);
       } else {
         where['quantity'] = LessThanOrEqual(quantity);
       }
     }
-    if (price) {
-      if (moreThanGivenPrice) {
+    if (price && sortDirection) {
+      if (sortDirection.toLowerCase() == Direction.EqualOrMore) {
         where['price'] = MoreThanOrEqual(price);
       } else {
         where['price'] = LessThanOrEqual(price);
@@ -109,16 +180,25 @@ export class InventoryService {
     if (category) {
       where['category'] = category;
     }
-
-    orderBy['productName'] = sortByName ? 'ASC' : 'DESC';
-    orderBy['price'] = sortByPrice ? 'ASC' : 'DESC';
-    orderBy['quantity'] = sortByQuantity ? 'ASC' : 'DESC';
+    if (sortBy && lowToHigh) {
+      orderBy[sortBy] = lowToHigh ? 'ASC' : 'DESC';
+    }
 
     inventory = await this.inventoryRepository.find({ where, order: orderBy });
     if (inventory.length != 0) {
-      return inventory;
+      return this.responseHandlerService.response(
+        null,
+        HttpStatus.OK,
+        'Filtered inventory fetched successfully',
+        inventory,
+      );
     } else {
-      throw new NotFoundException('No product found');
+      return this.responseHandlerService.response(
+        null,
+        HttpStatus.NO_CONTENT,
+        'No product found in the inventory',
+        inventory,
+      );
     }
   }
 }
