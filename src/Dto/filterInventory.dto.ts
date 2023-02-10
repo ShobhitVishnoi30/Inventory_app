@@ -1,25 +1,27 @@
-import { OmitType, PartialType, PickType } from '@nestjs/mapped-types';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { InventoryDto } from './createInventory.dto';
 
+export enum SortingOptions {
+  Price = 'price',
+  Quantity = 'quantity',
+}
+
+export enum Direction {
+  EqualOrLess = 'less',
+  EqualOrMore = 'more',
+}
+
 export class FilterInventoryDto extends PartialType(InventoryDto) {
-  @IsBoolean()
   @IsOptional()
-  moreThanGivenQuantity: Boolean = true;
-
-  @IsBoolean()
-  @IsOptional()
-  moreThanGivenPrice: Boolean = true;
+  @IsEnum(SortingOptions)
+  sortBy: SortingOptions;
 
   @IsOptional()
-  @IsBoolean()
-  sortByName: Boolean = true;
+  @IsEnum(Direction)
+  sortDirection: Direction;
 
   @IsOptional()
   @IsBoolean()
-  sortByPrice: Boolean = true;
-
-  @IsOptional()
-  @IsBoolean()
-  sortByQuantity: Boolean = true;
+  lowToHigh: Boolean;
 }
