@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Inventory } from 'src/Entity/inventory.entity';
+import { Inventory } from 'src/inventory/Entity/inventory.entity';
 import { ResponseHandlerService } from 'src/Utilities/response-handler.service';
 import { InventoryController } from './inventory.controller';
 import { InventoryService } from './inventory.service';

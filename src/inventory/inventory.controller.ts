@@ -8,9 +8,9 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { InventoryDto } from 'src/Dto/createInventory.dto';
-import { FilterInventoryDto } from 'src/Dto/filterInventory.dto';
-import { UpdateInventoryDto } from 'src/Dto/updateInventory.dto';
+import { InventoryDto } from 'src/inventory/Dto/createInventory.dto';
+import { FilterInventoryDto } from 'src/inventory/Dto/filterInventory.dto';
+import { UpdateInventoryDto } from 'src/inventory/Dto/updateInventory.dto';
 import { InventoryService } from './inventory.service';
 import { apiResponse } from 'src/Interfaces/api-response.interface';
 

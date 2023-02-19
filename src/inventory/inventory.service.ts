@@ -1,9 +1,12 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { InventoryDto } from 'src/Dto/createInventory.dto';
-import { Direction, FilterInventoryDto } from 'src/Dto/filterInventory.dto';
-import { UpdateInventoryDto } from 'src/Dto/updateInventory.dto';
-import { Inventory } from 'src/Entity/inventory.entity';
+import { InventoryDto } from 'src/inventory/Dto/createInventory.dto';
+import {
+  Direction,
+  FilterInventoryDto,
+} from 'src/inventory/Dto/filterInventory.dto';
+import { UpdateInventoryDto } from 'src/inventory/Dto/updateInventory.dto';
+import { Inventory } from 'src/inventory/Entity/inventory.entity';
 import { apiResponse } from 'src/Interfaces/api-response.interface';
 import { ResponseHandlerService } from 'src/Utilities/response-handler.service';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
@@ -65,14 +68,14 @@ export class InventoryService {
     });
     if (inventory) {
       return this.responseHandlerService.response(
-        '',
+        null,
         HttpStatus.OK,
         'Inventory fetched successfully',
         inventory,
       );
     } else {
       return this.responseHandlerService.response(
-        '',
+        null,
         HttpStatus.NO_CONTENT,
         'no such inventory exists',
         inventory,
@@ -95,7 +98,7 @@ export class InventoryService {
       try {
         inventory = await this.inventoryRepository.save(inventory);
         return this.responseHandlerService.response(
-          '',
+          null,
           HttpStatus.OK,
           'Inventory updated successfully',
           inventory,
@@ -110,7 +113,7 @@ export class InventoryService {
       }
     } else {
       return this.responseHandlerService.response(
-        '',
+        null,
         HttpStatus.NO_CONTENT,
         'no such inventory exists',
         inventory,
