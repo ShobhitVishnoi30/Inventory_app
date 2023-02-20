@@ -3,20 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { InventoryModule } from './inventory/inventory.module';
 import { ConfigModule } from '@nestjs/config';
 import * as path from 'path';
-import * as Joi from 'joi';
+import { envSchema } from './utilities/joi-validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env.stage.dev',
-      validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('localhost').default('localhost'),
-        PORT: Joi.number().default(3000),
-        DB_PORT: Joi.number(),
-        USERNAME: Joi.string(),
-        PASSWORD: Joi.string(),
-        DB_NAME: Joi.string(),
-      }),
+      validationSchema: envSchema,
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
