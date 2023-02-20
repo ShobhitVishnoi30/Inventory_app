@@ -7,12 +7,13 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { InventoryDto } from 'src/inventory/Dto/createInventory.dto';
-import { FilterInventoryDto } from 'src/inventory/Dto/filterInventory.dto';
-import { UpdateInventoryDto } from 'src/inventory/Dto/updateInventory.dto';
+import { InventoryDto } from 'src/inventory/dto/create-inventory.dto';
+import { FilterInventoryDto } from 'src/inventory/dto/filter-inventory.dto';
+import { UpdateInventoryDto } from 'src/inventory/dto/update-inventory.dto';
 import { InventoryService } from './inventory.service';
-import { apiResponse } from 'src/Interfaces/api-response.interface';
+import { ApiResponse } from 'src/interfaces/api-response.interface';
 
 @Controller('inventory')
 export class InventoryController {
@@ -21,26 +22,27 @@ export class InventoryController {
   @Post()
   async insertProduct(
     @Body() inventoryDto: InventoryDto,
-  ): Promise<apiResponse> {
+  ): Promise<ApiResponse> {
     return await this.inventoryService.insertProduct(inventoryDto);
   }
 
   @Get()
-  async getAllInventory(): Promise<apiResponse> {
+  async getAllInventory(): Promise<ApiResponse> {
     return await this.inventoryService.getAllInventory();
   }
 
+  //put filter in query
   @Get('filter')
   async filterInventory(
-    @Body() filterInventoryDto: FilterInventoryDto,
-  ): Promise<apiResponse> {
+    @Query() filterInventoryDto: FilterInventoryDto,
+  ): Promise<ApiResponse> {
     return await this.inventoryService.filteredInventory(filterInventoryDto);
   }
 
   @Get(':id')
   async getInventoryById(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<apiResponse> {
+  ): Promise<ApiResponse> {
     return await this.inventoryService.getInventoryById(id);
   }
 
@@ -48,14 +50,14 @@ export class InventoryController {
   async updateInventory(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateInventoryDto: UpdateInventoryDto,
-  ): Promise<apiResponse> {
+  ): Promise<ApiResponse> {
     return await this.inventoryService.updateInventory(id, updateInventoryDto);
   }
 
   @Delete(':id')
   async deleteInventory(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<apiResponse> {
+  ): Promise<ApiResponse> {
     return await this.inventoryService.deleteInventory(id);
   }
 }

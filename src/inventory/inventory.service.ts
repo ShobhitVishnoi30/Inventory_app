@@ -1,14 +1,14 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { InventoryDto } from 'src/inventory/Dto/createInventory.dto';
+import { InventoryDto } from 'src/inventory/dto/create-inventory.dto';
 import {
   Direction,
   FilterInventoryDto,
-} from 'src/inventory/Dto/filterInventory.dto';
-import { UpdateInventoryDto } from 'src/inventory/Dto/updateInventory.dto';
-import { Inventory } from 'src/inventory/Entity/inventory.entity';
-import { apiResponse } from 'src/Interfaces/api-response.interface';
-import { ResponseHandlerService } from 'src/Utilities/response-handler.service';
+} from 'src/inventory/dto/filter-inventory.dto';
+import { UpdateInventoryDto } from 'src/inventory/dto/update-inventory.dto';
+import { Inventory } from 'src/inventory/entity/inventory.entity';
+import { ApiResponse } from 'src/interfaces/api-response.interface';
+import { ResponseHandlerService } from 'src/utilities/response-handler.service';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class InventoryService {
     private readonly responseHandlerService: ResponseHandlerService,
   ) {}
 
-  async insertProduct(inventoryDto: InventoryDto): Promise<apiResponse> {
+  async insertProduct(inventoryDto: InventoryDto): Promise<ApiResponse> {
     try {
       let inventory = this.inventoryRepository.create(inventoryDto);
 
@@ -41,7 +41,7 @@ export class InventoryService {
     }
   }
 
-  async getAllInventory(): Promise<apiResponse> {
+  async getAllInventory(): Promise<ApiResponse> {
     const inventories = await this.inventoryRepository.find();
     if (inventories.length != 0) {
       return this.responseHandlerService.response(
@@ -60,7 +60,7 @@ export class InventoryService {
     }
   }
 
-  async getInventoryById(id: string): Promise<apiResponse> {
+  async getInventoryById(id: string): Promise<ApiResponse> {
     const inventory = await this.inventoryRepository.findOne({
       where: {
         id,
@@ -86,7 +86,7 @@ export class InventoryService {
   async updateInventory(
     id: string,
     updateInventory: UpdateInventoryDto,
-  ): Promise<apiResponse> {
+  ): Promise<ApiResponse> {
     let inventory = await this.inventoryRepository.findOneBy({ id });
 
     if (inventory) {
@@ -121,7 +121,7 @@ export class InventoryService {
     }
   }
 
-  async deleteInventory(id: string): Promise<apiResponse> {
+  async deleteInventory(id: string): Promise<ApiResponse> {
     const inventory = await this.inventoryRepository.findOne({
       where: {
         id,
@@ -148,9 +148,9 @@ export class InventoryService {
 
   async filteredInventory(
     filterInventoryDto: FilterInventoryDto,
-  ): Promise<apiResponse> {
+  ): Promise<ApiResponse> {
     let where = {};
-    let orderBy = {};
+    let ordersBy = {};
     let inventory: Inventory[];
 
     const {
@@ -160,21 +160,21 @@ export class InventoryService {
       quantity,
       sortBy,
       sortDirection,
-      lowToHigh,
+      orderBy,
     } = filterInventoryDto;
 
     if (productName) {
       where['productName'] = productName;
     }
     if (quantity && sortDirection) {
-      if (sortDirection.toLowerCase() == Direction.EqualOrMore) {
+      if (sortDirection.toLowerCase() == Direction.EQUALORMORE) {
         where['quantity'] = MoreThanOrEqual(quantity);
       } else {
         where['quantity'] = LessThanOrEqual(quantity);
       }
     }
     if (price && sortDirection) {
-      if (sortDirection.toLowerCase() == Direction.EqualOrMore) {
+      if (sortDirection.toLowerCase() == Direction.EQUALORLESS) {
         where['price'] = MoreThanOrEqual(price);
       } else {
         where['price'] = LessThanOrEqual(price);
@@ -183,11 +183,12 @@ export class InventoryService {
     if (category) {
       where['category'] = category;
     }
-    if (sortBy && lowToHigh) {
-      orderBy[sortBy] = lowToHigh ? 'ASC' : 'DESC';
+    if (sortBy) {
+      ordersBy[sortBy] = orderBy ? 'ASC' : 'DESC';
     }
 
-    inventory = await this.inventoryRepository.find({ where, order: orderBy });
+    inventory = await this.inventoryRepository.find({ where, order: ordersBy });
+
     if (inventory.length != 0) {
       return this.responseHandlerService.response(
         null,

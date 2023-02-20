@@ -8,7 +8,7 @@ import * as Joi from 'joi';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '.env.development.local',
+      envFilePath: '.env.stage.dev',
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().valid('localhost').default('localhost'),
         PORT: Joi.number().default(3000),
@@ -17,10 +17,6 @@ import * as Joi from 'joi';
         PASSWORD: Joi.string(),
         DB_NAME: Joi.string(),
       }),
-      validationOptions: {
-        allowUnknown: true, //Wanted to make it false but other env variables need to be added in that case
-        abortEarly: true,
-      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

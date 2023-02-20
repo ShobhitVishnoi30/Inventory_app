@@ -1,9 +1,9 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { apiResponse } from 'src/Interfaces/api-response.interface';
+import { ApiResponse } from 'src/interfaces/api-response.interface';
 @Injectable()
 export class ResponseHandlerService {
   async response(error, statusCode, message, data) {
-    let response: apiResponse;
+    let response: ApiResponse;
 
     if (error) {
       response = {

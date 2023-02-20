@@ -1,4 +1,4 @@
-export interface apiResponse {
+export interface ApiResponse {
   status: boolean;
   statusCode: number;
   error?: string;
